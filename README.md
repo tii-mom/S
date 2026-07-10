@@ -15,6 +15,7 @@
 ## 产品开发文档
 
 - [《上岸》产品开发文档 V1](docs/SHORE_PRODUCT_DEVELOPMENT_V1.md)
+- [《上岸》上线运营完整开发计划 V1](docs/SHORE_PRODUCTION_DEVELOPMENT_PLAN_V1.md)
 
 ## 产品原则
 
