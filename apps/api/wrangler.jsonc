@@ -1,0 +1,124 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "shore-api-local",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "vars": {
+    "APP_ENV": "local",
+    "CORS_ORIGIN": "http://localhost:3000",
+    "LOG_LEVEL": "debug",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "shore-local",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PRIVATE_FILES",
+      "bucket_name": "shore-private-local",
+    },
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "ASYNC_JOBS",
+        "queue": "shore-jobs-local",
+      },
+    ],
+    "consumers": [
+      {
+        "queue": "shore-jobs-local",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "shore-jobs-local-dlq",
+      },
+    ],
+  },
+  "env": {
+    "staging": {
+      "name": "shore-api-staging",
+      "vars": {
+        "APP_ENV": "staging",
+        "CORS_ORIGIN": "https://shore-web-staging.workers.dev",
+        "LOG_LEVEL": "info",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "shore-staging",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "PRIVATE_FILES",
+          "bucket_name": "shore-private-staging",
+        },
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "ASYNC_JOBS",
+            "queue": "shore-jobs-staging",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "shore-jobs-staging",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "shore-jobs-staging-dlq",
+          },
+        ],
+      },
+    },
+    "production": {
+      "name": "shore-api-production",
+      "vars": {
+        "APP_ENV": "production",
+        "CORS_ORIGIN": "https://shore.example",
+        "LOG_LEVEL": "warn",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "shore-production",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "PRIVATE_FILES",
+          "bucket_name": "shore-private-production",
+        },
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "ASYNC_JOBS",
+            "queue": "shore-jobs-production",
+          },
+        ],
+        "consumers": [
+          {
+            "queue": "shore-jobs-production",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "shore-jobs-production-dlq",
+          },
+        ],
+      },
+    },
+  },
+}

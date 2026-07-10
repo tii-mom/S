@@ -1,0 +1,35 @@
+{
+  "name": "shore",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.34.4",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "check:cloudflare": "pnpm --filter @shore/web check:cloudflare && pnpm --filter @shore/api build",
+    "smoke:local": "node scripts/smoke-local.mjs",
+    "preview:web": "pnpm --filter @shore/web preview",
+    "preview:api": "pnpm --filter @shore/api dev",
+    "deploy:staging": "turbo deploy:staging",
+    "deploy:production": "turbo deploy:production"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.6.0",
+    "globals": "17.7.0",
+    "prettier": "3.9.5",
+    "turbo": "2.10.4",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.63.0",
+    "vitest": "4.1.10"
+  }
+}
