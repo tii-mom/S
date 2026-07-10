@@ -106,6 +106,41 @@ Production resources are provisioned separately and never reuse Staging IDs.
 
 ## 5. Deployment commands
 
+### 5.1 Testnet ShoreClaim contract
+
+Contract deployment is a separate, manual and Testnet-only operation. Before deployment:
+
+1. review the frozen code hash and message schema;
+2. confirm SHORE Jetton metadata uses `decimals=0`;
+3. verify the admin address and distribution Jetton Wallet;
+4. generate a dedicated Testnet Ed25519 signer key pair;
+5. keep the seed offline until it is inserted as a Cloudflare Secret;
+6. run the full contract Sandbox suite.
+
+Required deployment variables:
+
+```text
+SHORE_CLAIM_ADMIN_ADDRESS
+SHORE_DISTRIBUTION_JETTON_WALLET
+SHORE_CLAIM_SIGNER_PUBLIC_KEY_HEX
+```
+
+Run Blueprint interactively and select TON Testnet:
+
+```bash
+pnpm --filter @shore/contracts start
+```
+
+The script refuses any network other than Testnet. After deployment, independently verify the deployed code hash equals:
+
+```text
+3C36374EB259F4619BF75C3DAFCA3B323F9AB799B1BC2F19008EBCAE94C7DFBC
+```
+
+Do not deploy from CI and do not commit a deployment mnemonic.
+
+### 5.2 Cloudflare applications
+
 Staging:
 
 ```bash
@@ -133,6 +168,7 @@ Secrets use:
 ```bash
 wrangler secret put TELEGRAM_BOT_TOKEN --env staging
 wrangler secret put ADMIN_REVIEW_TOKEN --env staging
+wrangler secret put SHORE_CLAIM_SIGNER_SEED_BASE64 --env staging
 ```
 
 Production secrets must be injected separately after Production approval; never reuse Staging credentials.

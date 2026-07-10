@@ -276,7 +276,8 @@ const claimStatusCopy: Record<ClaimReadiness["status"], string> = {
   wallet_required: "先连接并验证TON钱包",
   entitlement_required: "暂无可领取权益",
   contract_not_configured: "Testnet领取合约未配置",
-  ready_testnet: "准备Testnet领取意图",
+  signer_not_configured: "Testnet领取签名器未配置",
+  ready_testnet: "生成签名并确认领取",
   mainnet_disabled: "主网领取已禁用",
 };
 

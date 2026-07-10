@@ -1,92 +1,247 @@
 # SHORE Contract Invariants
 
-## 1. Status
+## 1. 当前状态
 
-The Tolk contracts are not implemented in Phase 0. These rules are binding requirements for implementation, tests and audit.
+已实现并通过Sandbox测试：
 
-## 2. ShoreJetton
+```text
+ShoreClaim V1
+```
 
-- Maximum initial supply is exactly `10,000,000,000 SHORE` in token smallest units.
-- No administrator path may increase supply beyond the fixed cap.
-- Supply and wallet balances remain internally consistent after transfer and burn.
-- Invalid or unauthorized messages do not mutate supply or balances.
-- Metadata administration, if retained at deployment, must be explicitly time-locked or permanently disabled before public launch.
+尚未实现：
 
-## 3. GenesisSale
+```text
+ShoreJetton
+GenesisSale
+FounderVestingController
+CommunityDistributor
+TeamVesting
+RoundUnlockController
+```
 
-- Package price is exactly `58 TON` unless a new reviewed deployment replaces the contract before sale starts.
-- Maximum packages sold is `1,333`.
-- Maximum packages per buyer address is `10`.
-- Each package grants exactly:
-  - `100,000 SHORE` immediate allocation;
-  - `2,700,000 SHORE` vesting entitlement;
-  - `150,000 SHORE` per round for 18 rounds.
-- A payment message can create at most one purchase record.
-- Underpayment cannot create partial rights.
-- Overpayment handling is deterministic and documented.
-- Sale closure at Round 1 is irreversible.
-- A successful payment cannot exist without a recoverable purchase entitlement.
-- Administrative withdrawal cannot alter buyer allocations.
+当前合约仅允许受控Testnet验证。未完成独立审计、Testnet部署和链上索引闭环前，不得启用主网。
 
-## 4. VestingController
+## 2. SHORE Token单位
 
-- There are exactly 18 configured founder rounds.
-- A package can claim no more than `150,000 SHORE` per eligible round.
-- Total claims for a package cannot exceed `2,700,000 SHORE`.
-- The same package and round cannot be confirmed twice.
-- Claim state follows:
+V1冻结：
+
+```text
+Jetton decimals = 0
+Maximum supply = 10,000,000,000 SHORE
+Smallest unit = 1 SHORE
+```
+
+因此D1权益、API金额、合约金额和用户显示金额使用相同整数单位。
+
+任何修改decimals的提案必须同时修改：
+
+- Jetton metadata；
+- D1金额字段和迁移；
+- API Schema；
+- Claim签名Schema；
+- 合约测试；
+- 前端显示；
+- 总供应量不变量。
+
+## 3. ShoreClaim V1
+
+### 3.1 授权绑定
+
+每份授权必须绑定：
+
+```text
+签名域
+协议版本
+ShoreClaim合约地址
+领取钱包地址
+唯一claimId
+精确SHORE数量
+生效时间
+过期时间
+```
+
+因此授权不能跨合约、跨钱包、跨金额或跨claimId重放。
+
+### 3.2 签名
+
+- 只接受配置公钥对应的Ed25519签名；
+- 后端种子派生公钥必须与公开配置公钥一致；
+- 错误签名不得修改存储；
+- 过期或尚未生效的授权不得修改存储；
+- signer轮换只允许admin执行。
+
+### 3.3 唯一领取
+
+```text
+NONE → PENDING → COMPLETED
+```
+
+- 同一 `claimId` 在PENDING或COMPLETED状态不得再次领取；
+- claim记录必须保存领取钱包、金额和授权窗口；
+- 金额必须大于0；
+- 用户必须附带不低于0.08 TON；
+- 用户钱包必须是消息真实发送者。
+
+### 3.4 Jetton转账
+
+- ShoreClaim不铸币；
+- 只调用配置的distribution Jetton Wallet；
+- 使用标准 `0x0f8a7ea5` Jetton Transfer；
+- `query_id`必须等于 `claimId`；
+- `jetton_amount`必须等于签名金额；
+- `transfer_recipient`必须等于领取钱包；
+- `send_excesses_to`必须等于ShoreClaim；
+- distribution wallet必须预先拥有足额SHORE。
+
+### 3.5 Bounce恢复
+
+初始发送至distribution Jetton Wallet的消息bounce时，仅在以下条件全部成立时恢复：
+
+- bounce发送者是当前配置的distribution Jetton Wallet；
+- bounced Opcode是标准Jetton Transfer；
+- bounced `query_id`存在；
+- claim处于PENDING；
+- bounced金额等于记录金额。
+
+恢复行为：
+
+```text
+PENDING → 删除记录 → NONE
+```
+
+恢复不能增加用户总权益，也不能产生第二次成功支付。
+
+### 3.6 异步下游结果
+
+TON消息异步执行。distribution Jetton Wallet接受初始消息，不等于最终用户Jetton Wallet已经成功入账。
+
+因此：
+
+- 合约不在初始调用后自动标记COMPLETED；
+- D1不把TON Connect返回BOC视为链上成功；
+- 必须由索引器读取链上证据；
+- 只有确认成功后才能进入COMPLETED/confirmed；
+- 不确定结果保持PENDING/submitted，不得重复支付。
+
+### 3.7 管理恢复
+
+管理员执行RESET必须同时满足：
+
+- 合约已暂停；
+- claim仍处于PENDING；
+- 当前时间晚于 `expiresAt + 86400`；
+- 运营侧已保存链上失败或未完成证据。
+
+暂停不得删除、减少或没收用户权益。
+
+### 3.8 管理权限
+
+admin可以：
+
+- pause/unpause；
+- rotate signer；
+- change distribution wallet；
+- resolve pending为COMPLETED；
+- 在延迟和暂停条件满足后RESET。
+
+主网前admin必须升级为多签和受控变更流程。单签普通钱包是上线阻断项。
+
+## 4. ShoreJetton（待实现）
+
+- 总供应上限恰好为 `10,000,000,000 SHORE`；
+- decimals固定为0；
+- 无管理路径可突破供应上限；
+- 转账、burn和wallet余额必须保持一致；
+- 非法消息不得改变供应或余额；
+- metadata管理权必须在公开上线前时间锁或永久关闭。
+
+## 5. GenesisSale（待实现）
+
+- 单份价格为58 TON，除非销售开始前使用新审查版本替换；
+- 最大1333份；
+- 单地址最大10份；
+- 每份授予：
+  - 100,000 SHORE即时分配；
+  - 2,700,000 SHORE锁定权益；
+  - 18轮每轮150,000 SHORE；
+- 一条支付消息最多创建一条购买记录；
+- 低于价格不得创建部分权益；
+- 超额支付处理必须确定；
+- Round 1开始后销售永久关闭；
+- 成功付款必须对应可恢复的购买权益。
+
+## 6. FounderVestingController（待实现）
+
+- 恰好18轮；
+- 每份每轮最多150,000 SHORE；
+- 单份总领取不超过2,700,000 SHORE；
+- 同一份和同一轮不能确认两次；
+- 状态遵循：
 
 ```text
 eligible → pending transfer → confirmed
 ```
 
-- Failed asynchronous transfer follows:
+失败恢复：
 
 ```text
-pending transfer → bounced or expired → claimable again
+pending transfer → bounced/expired → claimable again
 ```
 
-- A bounce restores claimability without increasing total entitlement.
-- A retry cannot produce a second successful payment for the same nonce.
-- Pause prevents new state transitions but cannot delete, reduce or confiscate user rights.
-- Missing off-chain eligibility proof fails closed and leaves entitlement unchanged.
+重试不得导致同一nonce重复成功。
 
-## 5. CommunityDistributor
+## 7. CommunityDistributor（待实现）
 
-- Each round distribution root is versioned and linked to a fixed maximum allocation.
-- A leaf can be claimed once.
-- A proof for one network, round or address cannot be replayed in another.
-- Root replacement requires the documented authority and time lock.
-- Total successful claims cannot exceed the funded round pool.
-- Unclaimed-token handling is deterministic and cannot be changed after the round begins without the documented governance path.
+- 每轮Merkle root必须版本化并绑定固定最大分配；
+- 每个leaf只能领取一次；
+- proof不能跨网络、轮次或地址重放；
+- root替换必须经过受控权限和时间锁；
+- 成功领取总额不得超过已注资池；
+- 未领取余额处理必须在轮次开始前固定。
 
-## 6. Team vesting
+## 8. TeamVesting（待实现）
 
-- Team allocation is isolated from user and community pools.
-- Team rights cannot be withdrawn ahead of the published schedule.
-- Team vesting administration cannot modify founder entitlements.
-- Team receiver and authority changes are logged and time-locked.
+- 团队分配与用户、社区池隔离；
+- 不得提前释放；
+- 管理操作不得修改创世用户权益；
+- 接收地址和权限变更必须审计并时间锁。
 
-## 7. Round activation
+## 9. RoundUnlockController（待实现）
 
-- A single application administrator cannot activate a round.
-- Missing or conflicting price/action evidence fails closed.
-- Activation is monotonic: Round N cannot activate after Round N+1.
-- A round cannot return to locked after claims have begun.
-- Activation does not by itself bypass individual claim eligibility.
+- 单一应用管理员不能独自激活轮次；
+- 缺失或冲突的价格、行动、收入或流动性证据必须失败关闭；
+- 轮次单调推进；
+- 已开始领取的轮次不能回到LOCKED；
+- 轮次激活不能绕过个人领取资格。
 
-## 8. Required tests
+## 10. 必需测试
 
-Every contract implementation includes:
+每个合约必须包含：
 
-- exact boundary tests;
-- unauthorized-message tests;
-- replay tests;
-- duplicate-claim tests;
-- bounce and retry tests;
-- pause tests;
-- total-allocation reconciliation;
-- property or invariant tests;
-- gas-regression reporting.
+- 精确边界测试；
+- 未授权消息测试；
+- 签名域和重放测试；
+- 重复领取测试；
+- bounce与retry测试；
+- pause测试；
+- 总量核对；
+- getter与前后端序列化一致性测试；
+- 属性或不变量测试；
+- gas回归报告。
 
-No mainnet deployment is allowed while an invariant is untested or an audit P0/P1 issue remains open.
+当前ShoreClaim已覆盖10项核心Sandbox测试，但仍未替代独立安全审计。
+
+## 11. 主网上线阻断
+
+存在任一项时不得部署主网：
+
+- Token decimals或单位不一致；
+- 合约代码哈希与审计版本不一致；
+- claim loss on bounce；
+- duplicate claim on retry；
+- 下游异步结果被错误视为完成；
+- admin仍为单签；
+- 未关闭的审计P0/P1；
+- 未验证distribution wallet归属和余额；
+- 缺失链上索引、超时和恢复流程；
+- Testnet端到端证据不完整。

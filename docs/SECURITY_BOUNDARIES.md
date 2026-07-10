@@ -108,6 +108,18 @@ Contract administration requires multisig and later time-lock controls. A single
 
 TON asynchronous message failures must restore claimability without enabling replay.
 
+SHORE claim-specific controls:
+
+- SHORE V1 Jetton decimals are fixed at `0` so D1 and chain units cannot diverge;
+- claim authorizations bind domain, version, contract, wallet, claim ID, amount and time window;
+- the signing seed is a Cloudflare Secret and must never appear in vars, logs or Git;
+- the API verifies the seed-derived public key against the configured and deployed public key;
+- a TON Connect wallet-returned BOC changes D1 only to `submitted`, never directly to `confirmed`;
+- chain confirmation requires independent indexer evidence;
+- unresolved submitted claims cannot be automatically reissued;
+- manual reset requires pause, delay and recorded chain evidence;
+- deployment scripts reject mainnet.
+
 ## 9. AI boundary
 
 AI output is untrusted advice, not an authority.
@@ -138,6 +150,9 @@ No public mainnet sale while any of the following remains:
 - contract supply or purchase limit bypass;
 - claim loss on bounce;
 - duplicate claim on retry;
+- D1 and Jetton decimal-unit mismatch;
+- missing independent chain confirmation for submitted claims;
+- signing seed/public-key mismatch or missing rotation procedure;
 - single-admin treasury control;
 - unaudited P0/P1 contract issue;
 - shared Staging/Production resources;

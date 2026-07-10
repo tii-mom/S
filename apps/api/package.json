@@ -17,6 +17,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings worker-configuration.d.ts"
   },
   "dependencies": {
+    "@shore/contracts": "workspace:*",
     "@shore/shared": "workspace:*",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^16.3.0",

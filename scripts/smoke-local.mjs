@@ -1,4 +1,5 @@
 import { spawn, execFileSync } from "node:child_process";
+import net from "node:net";
 import process from "node:process";
 
 const root = new URL("..", import.meta.url).pathname;
@@ -54,20 +55,52 @@ function expect(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function isPortOpen(port) {
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host: "127.0.0.1", port });
+    const finish = (open) => {
+      socket.removeAllListeners();
+      socket.destroy();
+      resolve(open);
+    };
+    socket.setTimeout(250);
+    socket.once("connect", () => finish(true));
+    socket.once("timeout", () => finish(false));
+    socket.once("error", () => finish(false));
+  });
+}
+
+async function waitForPortsClosed(ports, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const states = await Promise.all(ports.map((port) => isPortOpen(port)));
+    if (states.every((open) => !open)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return false;
+}
+
 async function stopAll() {
   const signal = (child, signalName) => {
-    if (child.pid === undefined || child.exitCode !== null) return;
+    if (child.pid === undefined) return;
     try {
-      if (process.platform === "win32") child.kill(signalName);
-      else process.kill(-child.pid, signalName);
+      if (process.platform === "win32") {
+        if (child.exitCode === null) child.kill(signalName);
+      } else {
+        process.kill(-child.pid, signalName);
+      }
     } catch {
-      child.kill(signalName);
+      if (child.exitCode === null) child.kill(signalName);
     }
   };
 
   for (const { child } of processes) signal(child, "SIGTERM");
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  if (await waitForPortsClosed([8787, 3100], 2_000)) return;
+
   for (const { child } of processes) signal(child, "SIGKILL");
+  if (!(await waitForPortsClosed([8787, 3100], 5_000))) {
+    console.error("SHORE smoke cleanup warning: local runtime ports did not close in time.");
+  }
 }
 
 try {

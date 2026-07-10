@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useShoreRuntime } from "@/lib/shore-runtime/use-shore-runtime";
 import type { AccountView, ChartMode, MobileSection } from "@/lib/shore-terminal/types";
@@ -51,6 +51,24 @@ export function TerminalShell() {
     bindWallet: runtime.bindTonWallet,
   });
 
+  const handlePrepareClaim = useCallback(async () => {
+    const intent = await runtime.prepareClaim();
+    if (!intent || intent.status !== "prepared" || !intent.transaction || !intent.claimId) {
+      return;
+    }
+
+    try {
+      const walletResult = await walletBridge.sendTransaction(intent.transaction);
+      await runtime.confirmClaimSubmission(intent.claimId, walletResult.boc);
+    } catch (error) {
+      runtime.showNotice({
+        tone: "error",
+        message:
+          error instanceof Error ? `钱包未提交领取交易：${error.message}` : "钱包未提交领取交易。",
+      });
+    }
+  }, [runtime, walletBridge]);
+
   const missionPanel = (
     <MissionExecutionPanel
       dashboard={dashboard}
@@ -74,7 +92,7 @@ export function TerminalShell() {
         />
       }
       runtimeStatus={runtime.status}
-      onPrepareClaim={runtime.prepareClaim}
+      onPrepareClaim={handlePrepareClaim}
     />
   );
 

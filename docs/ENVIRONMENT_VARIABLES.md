@@ -11,16 +11,17 @@ The Web runtime defaults to `http://localhost:8787` locally. Staging and Product
 
 ## API vars
 
-| Variable                       | Local example                                 | Purpose                                                         |
-| ------------------------------ | --------------------------------------------- | --------------------------------------------------------------- |
-| `APP_ENV`                      | `local`                                       | `local`, `staging` or `production`                              |
-| `CORS_ORIGIN`                  | `http://localhost:3000,http://127.0.0.1:3100` | Comma-separated allowed Web origins                             |
-| `LOG_LEVEL`                    | `debug`                                       | Structured log threshold                                        |
-| `TON_APP_DOMAIN`               | `localhost`                                   | Exact domain expected in `ton_proof`                            |
-| `TON_NETWORK`                  | `testnet`                                     | `testnet` or `mainnet`; current project policy requires Testnet |
-| `SHORE_CLAIM_CONTRACT_ADDRESS` | empty                                         | Testnet claim contract address; empty means fail-closed         |
+| Variable                            | Local example                                 | Purpose                                                         |
+| ----------------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| `APP_ENV`                           | `local`                                       | `local`, `staging` or `production`                              |
+| `CORS_ORIGIN`                       | `http://localhost:3000,http://127.0.0.1:3100` | Comma-separated allowed Web origins                             |
+| `LOG_LEVEL`                         | `debug`                                       | Structured log threshold                                        |
+| `TON_APP_DOMAIN`                    | `localhost`                                   | Exact domain expected in `ton_proof`                            |
+| `TON_NETWORK`                       | `testnet`                                     | `testnet` or `mainnet`; current project policy requires Testnet |
+| `SHORE_CLAIM_CONTRACT_ADDRESS`      | empty                                         | Testnet ShoreClaim address; empty means fail-closed             |
+| `SHORE_CLAIM_SIGNER_PUBLIC_KEY_HEX` | empty                                         | 32-byte Ed25519 public key used by the deployed contract        |
 
-`SHORE_CLAIM_CONTRACT_ADDRESS` must remain empty until the contract address and message schema are both reviewed and deployed.
+`SHORE_CLAIM_CONTRACT_ADDRESS` and `SHORE_CLAIM_SIGNER_PUBLIC_KEY_HEX` must remain empty until the audited Testnet contract configuration is deployed. The API verifies that the Secret seed derives this exact public key before signing.
 
 ## API secrets
 
@@ -29,6 +30,7 @@ The following values must be configured with Cloudflare Secrets and never placed
 ```text
 TELEGRAM_BOT_TOKEN
 ADMIN_REVIEW_TOKEN
+SHORE_CLAIM_SIGNER_SEED_BASE64
 ```
 
 Set them per environment, for example through Wrangler's secret command or the Cloudflare dashboard. Local development uses dedicated non-production values in `apps/api/.dev.vars`, which is ignored by Git.

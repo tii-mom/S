@@ -36,6 +36,11 @@ type CountRow = {
   pending_proofs: number;
 };
 
+type PreparedClaimRow = {
+  amount: number;
+  authorization_expires_at: number | null;
+};
+
 export function registerDashboardRoutes(
   app: Hono<{ Bindings: Bindings; Variables: Variables }>,
 ): void {
@@ -43,7 +48,7 @@ export function registerDashboardRoutes(
     const user = getAuthenticatedUser(context);
     const network = context.env.TON_NETWORK;
 
-    const [debt, mission, balances, counts, roundsResult, activitiesResult, wallet] =
+    const [debt, mission, balances, counts, roundsResult, activitiesResult, wallet, preparedClaim] =
       await Promise.all([
         context.env.DB.prepare(
           `SELECT currency, confirmed_amount_minor, covered_amount_minor
@@ -102,6 +107,15 @@ export function registerDashboardRoutes(
         )
           .bind(user.id, network)
           .first<WalletRow>(),
+        context.env.DB.prepare(
+          `SELECT e.amount, c.authorization_expires_at
+             FROM token_claims c
+             JOIN shore_entitlements e ON e.id = c.entitlement_id
+            WHERE c.user_id = ?1 AND c.status = 'prepared'
+            ORDER BY c.created_at DESC LIMIT 1`,
+        )
+          .bind(user.id)
+          .first<PreparedClaimRow>(),
       ]);
 
     if (!debt || !mission || !balances || !counts) {
@@ -135,25 +149,41 @@ export function registerDashboardRoutes(
           status: "wallet_required" as const,
           reason: "Connect and verify a TON wallet before preparing a claim.",
         }
-      : balances.shore_claimable <= 0
+      : network === "mainnet"
         ? {
-            status: "entitlement_required" as const,
-            reason: "No claimable SHORE entitlement is available.",
+            status: "mainnet_disabled" as const,
+            reason: "Mainnet claims remain disabled until contract audit and launch approval.",
           }
-        : network === "mainnet"
+        : !contractAddress
           ? {
-              status: "mainnet_disabled" as const,
-              reason: "Mainnet claims remain disabled until contract audit and launch approval.",
+              status: "contract_not_configured" as const,
+              reason: "The Testnet claim contract address has not been configured.",
             }
-          : !contractAddress
+          : !context.env.SHORE_CLAIM_SIGNER_PUBLIC_KEY_HEX?.trim() ||
+              !context.env.SHORE_CLAIM_SIGNER_SEED_BASE64?.trim()
             ? {
-                status: "contract_not_configured" as const,
-                reason: "The Testnet claim contract address has not been configured.",
+                status: "signer_not_configured" as const,
+                reason: "The Testnet claim signer has not been configured.",
               }
-            : {
-                status: "ready_testnet" as const,
-                reason: "Wallet and entitlement checks passed for Testnet claim preparation.",
-              };
+            : preparedClaim
+              ? {
+                  status: "ready_testnet" as const,
+                  reason:
+                    preparedClaim.authorization_expires_at &&
+                    preparedClaim.authorization_expires_at < Math.floor(Date.now() / 1000)
+                      ? "The previous wallet authorization expired and will be refreshed on the next explicit claim action."
+                      : "A signed Testnet claim transaction is ready to reopen in the wallet.",
+                }
+              : balances.shore_claimable <= 0
+                ? {
+                    status: "entitlement_required" as const,
+                    reason: "No claimable SHORE entitlement is available.",
+                  }
+                : {
+                    status: "ready_testnet" as const,
+                    reason:
+                      "Wallet, entitlement, contract and signer checks passed for Testnet claim preparation.",
+                  };
 
     const response = dashboardResponseSchema.parse({
       source: "d1",
@@ -186,7 +216,7 @@ export function registerDashboardRoutes(
       wallet: mappedWallet,
       claimReadiness: {
         ...claimReadiness,
-        claimableAmount: balances.shore_claimable,
+        claimableAmount: preparedClaim?.amount ?? balances.shore_claimable,
         contractAddress,
         network,
       },

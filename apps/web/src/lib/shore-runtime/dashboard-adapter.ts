@@ -60,7 +60,7 @@ export function mapD1Dashboard(input: DashboardResponse): TerminalDashboard {
     todayActionIncome: 0,
     apBalance: input.balances.ap,
     shoreBalance: input.balances.shoreClaimed,
-    shoreClaimable: input.balances.shoreClaimable,
+    shoreClaimable: Math.max(input.balances.shoreClaimable, input.claimReadiness.claimableAmount),
     shoreLocked: input.balances.shoreLocked,
     currentRound,
     completedRounds,

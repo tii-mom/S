@@ -1,6 +1,7 @@
 import {
   apiErrorSchema,
   claimIntentResponseSchema,
+  claimSubmissionResponseSchema,
   dashboardResponseSchema,
   sessionBootstrapResponseSchema,
   startMissionResponseSchema,
@@ -8,6 +9,7 @@ import {
   tonProofNonceResponseSchema,
   verifyTonProofResponseSchema,
   type ClaimIntentResponse,
+  type ClaimSubmissionResponse,
   type DashboardResponse,
   type SessionBootstrapResponse,
   type StartMissionResponse,
@@ -216,6 +218,20 @@ export async function createClaimIntent(): Promise<ClaimIntentResponse> {
       headers: { "x-idempotency-key": createIdempotencyKey("claim-intent") },
     }),
     claimIntentResponseSchema,
+  );
+}
+
+export async function recordClaimSubmission(
+  claimId: string,
+  boc: string,
+): Promise<ClaimSubmissionResponse> {
+  return parseResponse(
+    await authenticatedFetch(`/api/v1/claims/${encodeURIComponent(claimId)}/submitted`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ boc }),
+    }),
+    claimSubmissionResponseSchema,
   );
 }
 

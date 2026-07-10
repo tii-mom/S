@@ -7,6 +7,7 @@ import {
   useTonWallet,
 } from "@tonconnect/ui-react";
 import type {
+  TonConnectTransaction,
   TonProofNonceResponse,
   VerifiedWallet,
   VerifyTonProofRequest,
@@ -26,6 +27,7 @@ export type TonWalletBridge = {
   connected: boolean;
   verified: boolean;
   openWallet: () => Promise<void>;
+  sendTransaction: (transaction: TonConnectTransaction) => Promise<{ boc: string }>;
 };
 
 export function useTonWalletBridge({
@@ -114,6 +116,19 @@ export function useTonWalletBridge({
     if (ready) await tonConnectUi.openModal();
   }, [connectionRestored, disabled, nonceState, prepareNonce, tonConnectUi, wallet]);
 
+  const sendTransaction = useCallback(
+    async (transaction: TonConnectTransaction) => {
+      if (!wallet || !verifiedWallet) {
+        throw new Error("A verified TON wallet is required before sending a claim transaction.");
+      }
+      if (wallet.account.chain !== "-3") {
+        throw new Error("SHORE claims are locked to TON Testnet.");
+      }
+      return tonConnectUi.sendTransaction(transaction);
+    },
+    [tonConnectUi, verifiedWallet, wallet],
+  );
+
   const visibleAddress = verifiedWallet?.addressFriendly || friendlyAddress;
   const label = !connectionRestored
     ? "RESTORING"
@@ -135,6 +150,7 @@ export function useTonWalletBridge({
     connected: Boolean(wallet),
     verified: Boolean(verifiedWallet),
     openWallet,
+    sendTransaction,
   };
 }
 

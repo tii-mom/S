@@ -19,16 +19,18 @@ Telegram Mini App身份
 → AP / SHORE权益 / 稳定奖励资格账本
 → TON Connect
 → ton_proof地址所有权验证
-→ Testnet领取意图
+→ Testnet签名领取交易
+→ 钱包显式确认
+→ submitted等待链上索引
 ```
 
 本版本没有接通：
 
 - 主网；
 - 真实稳定币支付；
-- SHORE真实链上领取；
-- 已部署Tolk领取合约；
-- 合约消息体生成；
+- 已部署的Testnet ShoreClaim与ShoreJetton；
+- 真实SHORE链上领取；
+- 链上索引确认与自动恢复；
 - 自动发奖；
 - 自动代表用户执行社交动作。
 
@@ -291,7 +293,7 @@ POST /api/v1/admin/proofs/:proofId/review
 - 钱包密码；
 - 用户签名权限托管。
 
-## 9. 领取意图
+## 9. Testnet签名领取
 
 领取前置条件：
 
@@ -302,7 +304,9 @@ D1可领取权益
 +
 TON Testnet
 +
-已配置领取合约地址
+已配置ShoreClaim合约地址
++
+已配置且公私钥匹配的领取签名器
 ```
 
 任何条件缺失都返回明确阻断代码：
@@ -312,11 +316,37 @@ WALLET_REQUIRED
 ENTITLEMENT_REQUIRED
 MAINNET_DISABLED
 CLAIM_CONTRACT_NOT_CONFIGURED
+CLAIM_SIGNER_NOT_CONFIGURED
 ```
 
-同一entitlement只能存在一个活跃领取记录；数据库使用部分唯一索引阻止并发重复领取。
+准备流程：
 
-当前即使领取意图准备成功，也不会生成伪造BOC或发送交易。只有已部署并确认消息协议的Testnet合约完成后，才能进入交易生成阶段。
+```text
+生成唯一uint64 onchainClaimId
+→ 构建绑定合约、钱包、金额和时间窗的授权Cell
+→ Ed25519签名Cell hash
+→ 构建ClaimRequest BOC
+→ 预留D1 claim记录
+→ 返回TON Connect Testnet transaction
+```
+
+前端只有在用户点击领取按钮后才调用 `sendTransaction`。钱包拒绝或关闭不会自动发送交易。
+
+钱包返回BOC后：
+
+```text
+prepared → submitted
+```
+
+`submitted`只表示钱包返回了有效TON BOC，不代表链上领取成功。只有索引器验证合约和Jetton链上证据后才能进入：
+
+```text
+submitted → confirmed
+```
+
+同一entitlement只能存在一个活跃领取记录；同一 `onchainClaimId` 只能存在一次。未签名的prepared授权过期后，D1会把领取标记failed并恢复权益为claimable。submitted记录没有链上证据时不得自动恢复或重复支付。
+
+当前ShoreClaim代码、消息Schema、API签名和前端钱包发送已经实现，但真实Testnet地址仍保持空配置，因此默认环境继续失败关闭，不会发送资产交易。
 
 ## 10. API摘要
 
@@ -339,6 +369,7 @@ GET  /api/v1/proofs/:proofId/file
 POST /api/v1/ton-proof/nonce
 POST /api/v1/ton-proof/verify
 POST /api/v1/claims/intents
+POST /api/v1/claims/:claimId/submitted
 ```
 
 ### Admin

@@ -18,6 +18,8 @@ export type Bindings = {
   TON_APP_DOMAIN: string;
   TON_NETWORK: "testnet" | "mainnet";
   SHORE_CLAIM_CONTRACT_ADDRESS?: string;
+  SHORE_CLAIM_SIGNER_PUBLIC_KEY_HEX?: string;
+  SHORE_CLAIM_SIGNER_SEED_BASE64?: string;
   ADMIN_REVIEW_TOKEN?: string;
   TELEGRAM_BOT_TOKEN?: string;
   DB: D1Database;

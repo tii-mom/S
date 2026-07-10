@@ -15,6 +15,7 @@ import type { TerminalDashboard } from "@/lib/shore-terminal/types";
 import {
   createClaimIntent,
   fetchDashboard,
+  recordClaimSubmission,
   requestTonProofNonce,
   ShoreApiError,
   startMission,
@@ -121,11 +122,30 @@ export function useShoreRuntime() {
   );
 
   const prepareClaim = useCallback(async (): Promise<ClaimIntentResponse | null> => {
-    return runMutation(
+    const result = await runMutation(
       createClaimIntent,
-      "Testnet领取意图已记录；未配置合约消息体时不会发起交易。",
+      "Testnet领取授权已生成，等待钱包明确确认。",
     );
+    if (!result) return null;
+    if (result.status === "blocked" || !result.transaction || !result.claimId) {
+      setNotice({ tone: "error", message: result.message });
+      return result;
+    }
+    setNotice({
+      tone: "pending",
+      message: "领取交易已准备完成，请在TON钱包中确认。拒绝签名不会发送资产交易。",
+    });
+    return result;
   }, [runMutation]);
+
+  const confirmClaimSubmission = useCallback(
+    async (claimId: string, boc: string) =>
+      runMutation(
+        () => recordClaimSubmission(claimId, boc),
+        "钱包已提交Testnet交易，正在等待链上索引确认。",
+      ),
+    [runMutation],
+  );
 
   const issueTonProofNonce = useCallback(() => requestTonProofNonce(), []);
 
@@ -139,6 +159,8 @@ export function useShoreRuntime() {
     [runMutation],
   );
 
+  const showNotice = useCallback((next: Exclude<RuntimeNotice, null>) => setNotice(next), []);
+
   return {
     dashboard,
     rawDashboard,
@@ -150,8 +172,10 @@ export function useShoreRuntime() {
     startCurrentMission,
     submitCurrentProof,
     prepareClaim,
+    confirmClaimSubmission,
     issueTonProofNonce,
     bindTonWallet,
+    showNotice,
     clearNotice: () => setNotice(null),
   };
 }

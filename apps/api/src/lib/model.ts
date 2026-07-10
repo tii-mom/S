@@ -160,7 +160,13 @@ const activityCopy: Record<string, { title: string; status: ActivityEvent["statu
   "proof.review.resubmission": { title: "Additional proof requested", status: "pending" },
   "wallet.ton_proof.verified": { title: "TON wallet verified", status: "success" },
   "claim.intent.blocked": { title: "Claim preparation blocked", status: "error" },
-  "claim.intent.prepared": { title: "Claim intent prepared", status: "success" },
+  "claim.intent.prepared": { title: "Claim transaction prepared", status: "pending" },
+  "claim.authorization.expired": { title: "Claim authorization expired", status: "error" },
+  "claim.authorization.invalidated": {
+    title: "Claim authorization invalidated after configuration rotation",
+    status: "error",
+  },
+  "claim.transaction.submitted": { title: "Claim transaction submitted", status: "pending" },
 };
 
 export function mapActivity(row: AuditRow): ActivityEvent {

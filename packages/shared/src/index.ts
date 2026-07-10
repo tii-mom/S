@@ -146,6 +146,7 @@ export const claimReadinessSchema = z.object({
     "wallet_required",
     "entitlement_required",
     "contract_not_configured",
+    "signer_not_configured",
     "ready_testnet",
     "mainnet_disabled",
   ]),
@@ -247,16 +248,45 @@ export const verifyTonProofResponseSchema = z.object({
 });
 export type VerifyTonProofResponse = z.infer<typeof verifyTonProofResponseSchema>;
 
+export const tonConnectTransactionSchema = z.object({
+  validUntil: z.number().int().positive(),
+  network: z.literal("-3"),
+  messages: z
+    .array(
+      z.object({
+        address: z.string().min(1),
+        amount: z.string().regex(/^\d+$/),
+        payload: z.string().min(1),
+      }),
+    )
+    .length(1),
+});
+export type TonConnectTransaction = z.infer<typeof tonConnectTransactionSchema>;
+
 export const claimIntentResponseSchema = z.object({
   status: z.enum(["blocked", "prepared"]),
   code: z.string().min(1),
   message: z.string().min(1),
   claimId: z.string().nullable(),
+  onchainClaimId: z.string().regex(/^\d+$/).nullable(),
   network: walletNetworkSchema,
   contractAddress: z.string().nullable(),
   amount: z.number().int().nonnegative(),
+  authorizationExpiresAt: z.string().datetime().nullable(),
+  transaction: tonConnectTransactionSchema.nullable(),
 });
 export type ClaimIntentResponse = z.infer<typeof claimIntentResponseSchema>;
+
+export const claimSubmissionRequestSchema = z.object({
+  boc: z.string().min(16).max(32_000),
+});
+
+export const claimSubmissionResponseSchema = z.object({
+  claimId: z.string().min(1),
+  status: z.literal("submitted"),
+  submittedAt: z.string().datetime(),
+});
+export type ClaimSubmissionResponse = z.infer<typeof claimSubmissionResponseSchema>;
 
 export const apiErrorSchema = z.object({
   error: z.object({

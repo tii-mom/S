@@ -15,6 +15,7 @@
     "TON_APP_DOMAIN": "localhost",
     "TON_NETWORK": "testnet",
     "SHORE_CLAIM_CONTRACT_ADDRESS": "",
+    "SHORE_CLAIM_SIGNER_PUBLIC_KEY_HEX": "",
   },
   "d1_databases": [
     {
@@ -56,6 +57,7 @@
         "TON_APP_DOMAIN": "shore-web-staging.workers.dev",
         "TON_NETWORK": "testnet",
         "SHORE_CLAIM_CONTRACT_ADDRESS": "",
+        "SHORE_CLAIM_SIGNER_PUBLIC_KEY_HEX": "",
       },
       "d1_databases": [
         {
@@ -97,6 +99,7 @@
         "TON_APP_DOMAIN": "shore.example",
         "TON_NETWORK": "testnet",
         "SHORE_CLAIM_CONTRACT_ADDRESS": "",
+        "SHORE_CLAIM_SIGNER_PUBLIC_KEY_HEX": "",
       },
       "d1_databases": [
         {

@@ -7,6 +7,7 @@ Operational D1 migrations are now committed:
 ```text
 0001_operational_core.sql
 0002_runtime_hardening.sql
+0003_testnet_claim_authorizations.sql
 ```
 
 They support Local and controlled Staging. Applying them to Production remains a separate reviewed operation.
@@ -296,7 +297,16 @@ wallet_id
 entitlement_id
 network
 status
+onchain_claim_id
+contract_address
+authorization_valid_after
+authorization_expires_at
+authorization_hash
+signer_public_key_hex
+authorization_payload_boc
+transaction_valid_until
 transaction_boc
+submission_boc_hash
 transaction_hash
 failure_code
 idempotency_key
@@ -314,7 +324,16 @@ confirmed
 failed
 ```
 
-A partial unique index prevents more than one active claim for the same entitlement. A D1 trigger changes a claimable entitlement to `claim_pending` when a prepared claim is inserted.
+A partial unique index prevents more than one active claim for the same entitlement. A second unique index prevents reuse of the same uint64 `onchain_claim_id`. A D1 trigger changes a claimable entitlement to `claim_pending` when a prepared claim is inserted.
+
+State meaning:
+
+- `prepared`: signed Testnet authorization and TON Connect payload exist, but the wallet has not returned a submission BOC;
+- `submitted`: the wallet returned a valid TON BOC; this is not chain confirmation;
+- `confirmed`: the indexer has verified successful on-chain claim evidence;
+- `failed`: authorization expired before submission or verified chain recovery marked the attempt failed.
+
+An expired `prepared` claim is failed and its `claim_pending` entitlement is restored to `claimable`. A `submitted` claim is never automatically restored without chain evidence.
 
 ## 10. Rounds
 
