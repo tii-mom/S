@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+
+import {
+  ActionSheet,
+  PrimaryActionDock,
+  StatusOrbs,
+  type SheetMode,
+} from "@/components/shore-interaction-layer";
+import { getRoundProgress, useShoreExperience } from "@/lib/shore-experience";
 
 const VIEWBOX_WIDTH = 1000;
 const VIEWBOX_HEIGHT = 3440;
-const CURRENT_ROUND = 4;
 
 type Point = { x: number; y: number };
 type StageKind =
@@ -300,42 +307,51 @@ function DecorationGlyph({ type }: { type: (typeof decorationPoints)[number]["ty
   );
 }
 
+type StageStatus = "complete" | "current" | "locked";
+
 function StageButton({
   stage,
   index,
+  status,
+  progress,
   selected,
   onSelect,
 }: {
   stage: Stage;
   index: number;
+  status: StageStatus;
+  progress: number;
   selected: boolean;
   onSelect: () => void;
 }) {
   const round = index + 1;
-  const status =
-    round < CURRENT_ROUND ? "complete" : round === CURRENT_ROUND ? "current" : "locked";
   const style = {
     "--stage-x": `${(stage.x / VIEWBOX_WIDTH) * 100}%`,
     "--stage-y": `${(stage.y / VIEWBOX_HEIGHT) * 100}%`,
     "--stage-accent": stage.accent,
     "--stage-soft": stage.accentSoft,
+    "--stage-progress": `${progress * 3.6}deg`,
   } as CSSProperties;
 
   return (
     <button
       type="button"
-      className={`round-node round-node--${status}${selected ? " round-node--selected" : ""}`}
+      className={`round-node round-node--${status}${progress === 100 && status === "current" ? " round-node--claimable" : ""}${selected ? " round-node--selected" : ""}`}
       style={style}
+      data-round={round}
       aria-label={`第${round}轮${status === "complete" ? "已完成" : status === "current" ? "进行中" : "未解锁"}`}
       aria-pressed={selected}
-      disabled={status === "locked"}
       onClick={onSelect}
     >
+      <span className="round-node__progress" aria-hidden="true" />
       <span className="round-node__halo" />
       <span className="round-node__rim">
         <span className="round-node__face">
           <Glyph kind={stage.kind} />
         </span>
+      </span>
+      <span className="round-node__number" aria-hidden="true">
+        {round}
       </span>
       {status === "complete" ? (
         <span className="round-node__check" aria-hidden="true">
@@ -399,7 +415,71 @@ function FinalChest() {
 }
 
 export function RoundMap() {
-  const [selectedRound, setSelectedRound] = useState(CURRENT_ROUND);
+  const {
+    state,
+    hydrated,
+    primaryAction,
+    actionProgress,
+    activeRound,
+    confirmDebt,
+    startTask,
+    submitProof,
+    connectWallet,
+    claimRound,
+    recordShare,
+    reset,
+  } = useShoreExperience();
+  const [selectedRound, setSelectedRound] = useState(activeRound);
+  const [sheetMode, setSheetMode] = useState<SheetMode | null>(null);
+  const activeRoundProgress = getRoundProgress(state, activeRound);
+  const routeCompletion = Math.min(100, ((activeRound - 1 + activeRoundProgress / 100) / 17) * 100);
+  const claimableShore = state.taskStatus === "verified" && !state.claimedRound4 ? 150_000 : 0;
+
+  useEffect(() => {
+    if (!hydrated) return;
+    setSelectedRound(activeRound);
+    const timer = window.setTimeout(() => {
+      document.querySelector<HTMLElement>(`[data-round="${activeRound}"]`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 280);
+    return () => window.clearTimeout(timer);
+  }, [activeRound, hydrated]);
+
+  function openPrimaryAction() {
+    switch (primaryAction) {
+      case "setup":
+        setSheetMode("setup");
+        break;
+      case "start-task":
+        setSheetMode("task");
+        break;
+      case "submit-proof":
+        setSheetMode("proof");
+        break;
+      case "connect-wallet":
+        setSheetMode("wallet");
+        break;
+      case "claim":
+        setSheetMode("claim");
+        break;
+      case "wait":
+        setSelectedRound(activeRound);
+        setSheetMode("round");
+        break;
+    }
+  }
+
+  async function shareProgress() {
+    const text = `我正在上岸：已完成 ${state.taskStatus === "verified" ? 1 : 0} 个有效任务，行动进度 ${actionProgress}%。`;
+    if (navigator.share) {
+      await navigator.share({ title: "我的上岸进度", text });
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    }
+    recordShare();
+  }
 
   return (
     <main className="round-map" aria-label="十八轮解锁路线">
@@ -408,6 +488,14 @@ export function RoundMap() {
           <span key={index} style={{ "--spark-index": index } as CSSProperties} />
         ))}
       </div>
+
+      <StatusOrbs
+        progress={actionProgress}
+        availableShore={state.availableShore}
+        claimableShore={claimableShore}
+        onProgress={() => setSheetMode("progress")}
+        onAssets={() => setSheetMode("assets")}
+      />
 
       <div className="round-map__canvas">
         <TopPortal />
@@ -423,6 +511,11 @@ export function RoundMap() {
               <stop offset="0" stopColor="#b7b6f3" />
               <stop offset="0.46" stopColor="#d5caf4" />
               <stop offset="1" stopColor="#a8b8ef" />
+            </linearGradient>
+            <linearGradient id="routeProgressGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#7df0da" />
+              <stop offset="0.55" stopColor="#ffe47b" />
+              <stop offset="1" stopColor="#ff87b5" />
             </linearGradient>
             <filter id="routeShadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow
@@ -456,11 +549,22 @@ export function RoundMap() {
           <path
             d={pathData}
             fill="none"
-            stroke="#f1edff"
-            strokeWidth="24"
+            stroke="url(#routeProgressGradient)"
+            strokeWidth="42"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="0.9"
+            pathLength="100"
+            strokeDasharray={`${routeCompletion} 100`}
+            className="round-map__route-progress"
+          />
+          <path
+            d={pathData}
+            fill="none"
+            stroke="#f1edff"
+            strokeWidth="18"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.86"
           />
           <path
             d={pathData}
@@ -490,18 +594,47 @@ export function RoundMap() {
           </div>
         ))}
 
-        {stages.map((stage, index) => (
-          <StageButton
-            key={`${stage.x}-${stage.y}`}
-            stage={stage}
-            index={index}
-            selected={selectedRound === index + 1}
-            onSelect={() => setSelectedRound(index + 1)}
-          />
-        ))}
+        {stages.map((stage, index) => {
+          const round = index + 1;
+          const status: StageStatus =
+            round < activeRound ? "complete" : round === activeRound ? "current" : "locked";
+          return (
+            <StageButton
+              key={`${stage.x}-${stage.y}`}
+              stage={stage}
+              index={index}
+              status={status}
+              progress={getRoundProgress(state, round)}
+              selected={selectedRound === round}
+              onSelect={() => {
+                setSelectedRound(round);
+                setSheetMode("round");
+              }}
+            />
+          );
+        })}
 
         <FinalChest />
       </div>
+
+      <PrimaryActionDock action={primaryAction} onAction={openPrimaryAction} />
+
+      <ActionSheet
+        mode={sheetMode}
+        selectedRound={selectedRound}
+        state={state}
+        actionProgress={actionProgress}
+        primaryAction={primaryAction}
+        onClose={() => setSheetMode(null)}
+        onMode={setSheetMode}
+        onConfirmDebt={confirmDebt}
+        onStartTask={startTask}
+        onSubmitProof={submitProof}
+        onConnectWallet={connectWallet}
+        onClaim={claimRound}
+        onShare={shareProgress}
+        onReset={reset}
+      />
     </main>
   );
 }
