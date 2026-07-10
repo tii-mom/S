@@ -1,0 +1,25 @@
+{
+  "name": "@shore/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "build": "wrangler deploy --dry-run --env=\"\" --outdir dist",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --env production",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings worker-configuration.d.ts"
+  },
+  "dependencies": {
+    "@shore/shared": "workspace:*",
+    "hono": "4.12.28",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260710.1",
+    "wrangler": "4.110.0"
+  }
+}

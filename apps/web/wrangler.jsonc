@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "shore-web-local",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-07-10",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "vars": {
+    "APP_ENV": "local",
+    "API_BASE_URL": "http://localhost:8787",
+  },
+  "env": {
+    "staging": {
+      "name": "shore-web-staging",
+      "vars": {
+        "APP_ENV": "staging",
+        "API_BASE_URL": "https://shore-api-staging.workers.dev",
+      },
+    },
+    "production": {
+      "name": "shore-web-production",
+      "vars": {
+        "APP_ENV": "production",
+        "API_BASE_URL": "https://api.shore.example",
+      },
+    },
+  },
+}

@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+  - "contracts/*"
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
