@@ -91,7 +91,7 @@ try {
 
   await waitFor("http://127.0.0.1:3100", async (response) => {
     const html = await response.text();
-    return html.includes("round-map") && html.includes("round-node");
+    return html.includes("SHORE.TERMINAL") && html.includes("terminal-layout");
   });
 
   console.log("SHORE local smoke passed: Web and API are responding correctly.");

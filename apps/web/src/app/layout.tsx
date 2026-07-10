@@ -4,15 +4,15 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SHORE",
-  description: "SHORE eighteen-round unlock map.",
+  title: "SHORE.TERMINAL · 上岸执行终端",
+  description: "个人债务控制、Proof of Action任务网络与18轮SHORE解锁终端。",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#302f84",
+  themeColor: "#080908",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
