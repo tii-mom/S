@@ -1,5 +1,5 @@
-import { RoundMap } from "@/components/round-map";
+import { TerminalShell } from "@/components/terminal/terminal-shell";
 
 export default function HomePage() {
-  return <RoundMap />;
+  return <TerminalShell />;
 }
