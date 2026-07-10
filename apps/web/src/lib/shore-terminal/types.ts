@@ -34,7 +34,7 @@ export type MissionSummary = {
   stableReward: number;
   apReward: number;
   shoreRights: number;
-  risk: "LOW" | "MEDIUM";
+  risk: "LOW" | "MEDIUM" | "HIGH";
   verification: string;
 };
 
@@ -44,7 +44,7 @@ export type ActivityEvent = {
   type: "task" | "proof" | "reward" | "round" | "system";
   title: string;
   detail: string;
-  status: "success" | "pending" | "neutral";
+  status: "success" | "pending" | "neutral" | "error";
 };
 
 export type TerminalDashboard = {

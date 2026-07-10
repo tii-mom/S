@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { terminalDashboard } from "@/lib/shore-terminal/mock-data";
+import { useShoreRuntime } from "@/lib/shore-runtime/use-shore-runtime";
 import type { AccountView, ChartMode, MobileSection } from "@/lib/shore-terminal/types";
 
 import { AccountRail } from "./account-rail";
@@ -19,6 +19,7 @@ import { RoundSchedule } from "./round-schedule";
 import { TickerTape } from "./ticker-tape";
 import { TerminalHeader } from "./terminal-header";
 import { ActivityIcon, ActionIcon, ChevronIcon, DebtIcon, RoundIcon } from "./terminal-icons";
+import { TonWalletButton, useTonWalletBridge } from "./ton-wallet-control";
 
 const mobileTabs = [
   { id: "overview" as const, label: "概览", icon: DebtIcon },
@@ -28,15 +29,53 @@ const mobileTabs = [
 ];
 
 export function TerminalShell() {
-  const dashboard = terminalDashboard;
+  const runtime = useShoreRuntime();
+  const dashboard = runtime.dashboard;
   const [accountView, setAccountView] = useState<AccountView>("recovery");
   const [chartMode, setChartMode] = useState<ChartMode>("recovery");
   const [selectedRound, setSelectedRound] = useState(dashboard.currentRound);
   const [mobileSection, setMobileSection] = useState<MobileSection>("overview");
 
   const selectedRoundData = useMemo(
-    () => dashboard.rounds.find((round) => round.round === selectedRound) ?? dashboard.rounds[3]!,
+    () =>
+      dashboard.rounds.find((round) => round.round === selectedRound) ??
+      dashboard.rounds.find((round) => round.status === "active") ??
+      dashboard.rounds[0]!,
     [dashboard.rounds, selectedRound],
+  );
+
+  const walletBridge = useTonWalletBridge({
+    verifiedWallet: runtime.rawDashboard?.wallet ?? null,
+    disabled: !runtime.isLive,
+    issueNonce: runtime.issueTonProofNonce,
+    bindWallet: runtime.bindTonWallet,
+  });
+
+  const missionPanel = (
+    <MissionExecutionPanel
+      dashboard={dashboard}
+      execution={runtime.rawDashboard?.execution ?? null}
+      runtimeStatus={runtime.status}
+      runtimeLive={runtime.isLive}
+      onStart={runtime.startCurrentMission}
+      onSubmitProof={runtime.submitCurrentProof}
+    />
+  );
+
+  const claimPanel = (
+    <ClaimPanel
+      dashboard={dashboard}
+      claimReadiness={runtime.rawDashboard?.claimReadiness ?? null}
+      verifiedWallet={runtime.rawDashboard?.wallet ?? null}
+      walletButton={
+        <TonWalletButton
+          bridge={walletBridge}
+          className="terminal-primary-action terminal-primary-action--gold claim-wallet-button"
+        />
+      }
+      runtimeStatus={runtime.status}
+      onPrepareClaim={runtime.prepareClaim}
+    />
   );
 
   return (
@@ -44,15 +83,29 @@ export function TerminalShell() {
       <div className="terminal-grid-bg" aria-hidden="true" />
       <div className="terminal-scanline" aria-hidden="true" />
 
-      <TerminalHeader dashboard={dashboard} />
+      <TerminalHeader
+        dashboard={dashboard}
+        runtimeLive={runtime.isLive}
+        desktopWalletControl={<TonWalletButton bridge={walletBridge} />}
+        mobileWalletControl={<TonWalletButton bridge={walletBridge} compact />}
+      />
       <TickerTape dashboard={dashboard} />
+
+      {runtime.notice ? (
+        <div className={`runtime-notice runtime-notice--${runtime.notice.tone}`} role="status">
+          <span>{runtime.notice.message}</span>
+          <button type="button" onClick={runtime.clearNotice} aria-label="关闭运行时提示">
+            ×
+          </button>
+        </div>
+      ) : null}
 
       <div className="terminal-mobile-summary-wrap">
         <MobileSummary dashboard={dashboard} />
         <div className="mobile-kpi-strip">
           <span>
-            <small>今日任务</small>
-            <strong>01</strong>
+            <small>任务状态</small>
+            <strong>{runtime.rawDashboard?.execution ? "01" : "00"}</strong>
           </span>
           <span>
             <small>待领取</small>
@@ -113,9 +166,9 @@ export function TerminalShell() {
           <div
             className={`terminal-mobile-section terminal-mobile-only${mobileSection === "mission" ? " terminal-mobile-section--active" : ""}`}
           >
-            <MissionExecutionPanel dashboard={dashboard} />
+            {missionPanel}
             <NextRoundPanel round={selectedRoundData} />
-            <ClaimPanel dashboard={dashboard} />
+            {claimPanel}
           </div>
 
           <div
@@ -126,21 +179,21 @@ export function TerminalShell() {
         </section>
 
         <aside className="execution-rail" aria-label="执行控制栏">
-          <MissionExecutionPanel dashboard={dashboard} />
+          {missionPanel}
           <NextRoundPanel round={selectedRoundData} />
-          <ClaimPanel dashboard={dashboard} />
+          {claimPanel}
           <ActivityLog dashboard={dashboard} />
         </aside>
       </main>
 
       <footer className="terminal-footer">
         <span>
-          <i className="terminal-pulse" /> SHORE SYSTEM ONLINE
+          <i className="terminal-pulse" /> SHORE SYSTEM {runtime.isLive ? "ONLINE" : "DEGRADED"}
         </span>
         <span>ENV STAGING</span>
-        <span>API MOCK</span>
+        <span>API {runtime.isLive ? "D1 LIVE" : "FALLBACK"}</span>
         <span>TON TESTNET</span>
-        <strong>BUILD PHASE 0–3</strong>
+        <strong>BUILD PHASE 4–6</strong>
       </footer>
 
       <div className="mobile-action-bar">
@@ -158,7 +211,7 @@ export function TerminalShell() {
           </span>
         </div>
         <button type="button" onClick={() => setMobileSection("mission")}>
-          开始任务
+          {runtime.rawDashboard?.execution ? "查看任务" : "开始任务"}
           <ChevronIcon />
         </button>
       </div>

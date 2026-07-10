@@ -14,7 +14,7 @@ test("renders the SHORE terminal across desktop and mobile layouts", async ({ pa
       page.locator(".terminal-mobile-header").getByText("SHORE.TERMINAL", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.locator(".terminal-mobile-header").getByText("STAGING · DEMO DATA", { exact: true }),
+      page.locator(".terminal-mobile-header").getByText("STAGING · D1 LIVE", { exact: true }),
     ).toBeVisible();
   } else {
     await expect(
@@ -53,6 +53,38 @@ test("renders the SHORE terminal across desktop and mobile layouts", async ({ pa
     .toBe(true);
 
   expect(consoleErrors).toEqual([]);
+});
+
+test("creates a D1 mission execution and submits Proof to the review pipeline", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  const mobile = testInfo.project.name !== "desktop";
+
+  const scope = mobile
+    ? page.locator(".terminal-mobile-only.terminal-mobile-section--active")
+    : page.locator(".execution-rail");
+
+  if (mobile) {
+    await page.getByRole("tab", { name: "任务" }).click();
+  }
+
+  await expect(scope.getByRole("button", { name: "开始真实任务" })).toBeEnabled();
+  await scope.getByRole("button", { name: "开始真实任务" }).click();
+  await expect(scope.getByText("IN PROGRESS", { exact: true })).toBeVisible();
+
+  await scope.getByPlaceholder("https://...").fill("https://example.com/e2e-proof");
+  await scope
+    .getByPlaceholder("描述完成步骤、真实体验和可验证结果…")
+    .fill(
+      "我完成了测试任务的完整新手流程，并记录了页面步骤、实际体验和可验证结果。此内容仅用于自动化验收。 ",
+    );
+  await scope.getByRole("button", { name: "提交私有Proof" }).click();
+
+  await expect(scope.getByText(/QUEUED|MANUAL REVIEW/)).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+    .toBe(true);
 });
 
 test("supports chart, account, round, and mobile section interactions", async ({
