@@ -91,7 +91,7 @@ try {
 
   await waitFor("http://127.0.0.1:3100", async (response) => {
     const html = await response.text();
-    return html.includes("负债不是身份") && html.includes("FOUNDATION ONLINE");
+    return html.includes("上岸仙岛") && html.includes("每天做一件事");
   });
 
   console.log("SHORE local smoke passed: Web and API are responding correctly.");
