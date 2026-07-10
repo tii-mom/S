@@ -11,8 +11,8 @@
     "deploy:staging": "opennextjs-cloudflare build && opennextjs-cloudflare deploy --env staging",
     "deploy:production": "opennextjs-cloudflare build && opennextjs-cloudflare deploy --env production",
     "lint": "eslint src tests playwright.config.ts next.config.ts open-next.config.ts",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run src",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run src --passWithNoTests",
     "test:e2e": "playwright test",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },

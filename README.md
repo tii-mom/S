@@ -18,20 +18,21 @@
 
 ## 当前阶段
 
-**Phase 0 工程基线已经完成并合并。当前正在执行 Phase 1：原创 Q 版中国奇幻 Mock 用户闭环。**
+**Phase 0 工程基线已经完成。当前前端采用 V2 单页十八轮解锁地图。**
 
 已经建立：
 
 - pnpm Monorepo、Next.js/OpenNext Web 和 Hono Cloudflare API；
 - D1、R2、Queues 三环境绑定结构；
 - strict TypeScript、ESLint、Prettier、Vitest、Playwright 和 GitHub Actions；
-- 原创“上岸仙岛”Q版设计系统与吉祥物“岸宝”；
-- 首页、负债、任务、任务详情、金库、我的和分享卡；
-- 浏览器本地状态：负债目标、积分、任务完成、分享次数；
+- 单一纵向页面，不提供顶部栏、底部栏或其他页面导航；
+- 深蓝紫背景、浅紫弯曲路线和十八个 Q 版 UI 关卡；
+- 三个已完成节点、一个当前节点和十四个锁定节点；
+- 关卡仅使用宝石、星星、钥匙、盾牌、宝箱等原创 UI 图形，不使用人物；
 - 375×812、430×932、1280×900 三种屏幕 E2E；
 - Cloudflare OpenNext/Workers dry-run 与本地 Web/API Smoke。
 
-当前仍是 Mock 阶段，不连接真实 AI、TON 钱包、Tolk 合约或真实资产。真实 Cloudflare Staging 部署需要先完成 Wrangler 账户登录和资源创建。
+当前页面只负责表现十八轮解锁结构，不连接真实 AI、TON 钱包、Tolk 合约或真实资产。真实 Cloudflare Staging 部署需要先完成 Wrangler 账户登录和资源创建。
 
 ## 仓库结构
 
@@ -83,7 +84,7 @@ pnpm smoke:local
 pnpm test:e2e
 ```
 
-`pnpm check` 执行格式、Lint、类型、单元测试和构建；`pnpm check:cloudflare` 生成 OpenNext Worker 并对 Web/API 执行 Wrangler dry-run；`pnpm smoke:local` 检查 Web/API 运行时；`pnpm test:e2e` 在三种屏幕下验证完整 Mock 用户路径。
+`pnpm check` 执行格式、Lint、类型、单元测试和构建；`pnpm check:cloudflare` 生成 OpenNext Worker 并对 Web/API 执行 Wrangler dry-run；`pnpm smoke:local` 检查 Web/API 运行时；`pnpm test:e2e` 在三种屏幕下验证单页面、十八节点、无可见文字、无导航和无横向溢出。
 
 ## 主要文档
 
@@ -99,10 +100,10 @@ pnpm test:e2e
 
 ## 产品原则
 
-- 用户 3 秒理解产品；
-- 首次使用不要求钱包；
-- 每个页面只有一个主要操作；
-- 首页只推荐一个今日任务；
-- 提交证明最多两步；
-- 不增加小队、复杂等级、NFT、DAO、多链等非核心功能；
+- 前端只有一个纵向页面；
+- 页面不显示可见文字、人物、顶部栏或底部栏；
+- 十八个节点对应十八轮解锁；
+- 关卡状态只通过颜色、光效、勾选和锁定图标表达；
+- 所有装饰均为原创 Q 版 UI 组件；
+- 不增加与十八轮解锁无关的页面和功能；
 - 未通过阶段退出门禁，不进入下一阶段。
