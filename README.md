@@ -18,21 +18,20 @@
 
 ## 当前阶段
 
-正在执行 **Phase 0：SHORE Foundation & Cloudflare Staging Baseline V1**。
+**Phase 0 工程基线已经完成并合并。当前正在执行 Phase 1：原创 Q 版中国奇幻 Mock 用户闭环。**
 
 已经建立：
 
-- pnpm Monorepo；
-- Next.js + OpenNext Cloudflare Web；
-- Hono Cloudflare API Worker；
+- pnpm Monorepo、Next.js/OpenNext Web 和 Hono Cloudflare API；
 - D1、R2、Queues 三环境绑定结构；
-- strict TypeScript、ESLint、Prettier、Vitest、Turborepo；
-- GitHub Actions CI；
-- `/api/health` 健康检查；
-- Cloudflare `workerd` 打包验证；
-- 架构、数据、合约不变量、部署和安全边界文档。
+- strict TypeScript、ESLint、Prettier、Vitest、Playwright 和 GitHub Actions；
+- 原创“上岸仙岛”Q版设计系统与吉祥物“岸宝”；
+- 首页、负债、任务、任务详情、金库、我的和分享卡；
+- 浏览器本地状态：负债目标、积分、任务完成、分享次数；
+- 375×812、430×932、1280×900 三种屏幕 E2E；
+- Cloudflare OpenNext/Workers dry-run 与本地 Web/API Smoke。
 
-真实 Cloudflare Staging 部署需要先完成 Wrangler 账户登录和资源创建。
+当前仍是 Mock 阶段，不连接真实 AI、TON 钱包、Tolk 合约或真实资产。真实 Cloudflare Staging 部署需要先完成 Wrangler 账户登录和资源创建。
 
 ## 仓库结构
 
@@ -80,14 +79,17 @@ Health: http://localhost:8787/api/health
 ```bash
 pnpm check
 pnpm check:cloudflare
+pnpm smoke:local
+pnpm test:e2e
 ```
 
-`pnpm check` 执行格式、Lint、类型、测试和构建。`pnpm check:cloudflare` 额外生成 OpenNext Worker，并对 Web/API 执行 Wrangler dry-run。
+`pnpm check` 执行格式、Lint、类型、单元测试和构建；`pnpm check:cloudflare` 生成 OpenNext Worker 并对 Web/API 执行 Wrangler dry-run；`pnpm smoke:local` 检查 Web/API 运行时；`pnpm test:e2e` 在三种屏幕下验证完整 Mock 用户路径。
 
 ## 主要文档
 
 - [《上岸》产品开发文档 V1](docs/SHORE_PRODUCT_DEVELOPMENT_V1.md)
 - [《上岸》上线运营完整开发计划 V1](docs/SHORE_PRODUCTION_DEVELOPMENT_PLAN_V1.md)
+- [Q版中国奇幻视觉系统 V1](docs/Q_FANTASY_UI_SYSTEM_V1.md)
 - [系统架构](docs/ARCHITECTURE.md)
 - [数据模型规则](docs/DATA_MODEL.md)
 - [TON 合约不变量](docs/CONTRACT_INVARIANTS.md)

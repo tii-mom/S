@@ -41,3 +41,9 @@ jobs:
 
       - name: Verify Cloudflare bundles
         run: pnpm check:cloudflare
+
+      - name: Install browser runtime
+        run: pnpm --filter @shore/web exec playwright install --with-deps chromium
+
+      - name: Verify primary user journey
+        run: pnpm test:e2e
