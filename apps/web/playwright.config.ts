@@ -14,12 +14,21 @@ export default defineConfig({
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
   },
-  webServer: {
-    command: "pnpm exec next build && pnpm exec next start --hostname 127.0.0.1 --port 3100",
-    url: "http://127.0.0.1:3100",
-    reuseExistingServer: false,
-    timeout: 180_000,
-  },
+  webServer: [
+    {
+      command:
+        "cd ../.. && pnpm --filter @shore/api db:migrate:local && pnpm --filter @shore/api dev",
+      url: "http://127.0.0.1:8787/api/health",
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
+    {
+      command: "pnpm exec next build && pnpm exec next start --hostname 127.0.0.1 --port 3100",
+      url: "http://127.0.0.1:3100",
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
+  ],
   projects: [
     {
       name: "mobile-375",

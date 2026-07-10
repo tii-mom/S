@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import type { ReactNode } from "react";
 
 import "./globals.css";
+import { AppProviders } from "./providers";
 
 export const metadata: Metadata = {
   title: "SHORE.TERMINAL · 上岸执行终端",
@@ -18,7 +20,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <head>
+        <Script src="https://telegram.org/js/telegram-web-app.js?62" strategy="beforeInteractive" />
+      </head>
+      <body>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

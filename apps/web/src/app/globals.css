@@ -1552,6 +1552,191 @@ button {
   display: none;
 }
 
+.wallet-button:disabled,
+.terminal-primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.wallet-button--verified {
+  border-color: rgba(55, 217, 150, 0.55);
+  background: linear-gradient(180deg, rgba(55, 217, 150, 0.17), rgba(55, 217, 150, 0.07));
+  color: var(--green);
+}
+
+.runtime-notice {
+  position: sticky;
+  z-index: 44;
+  top: 87px;
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border-strong);
+  background: rgba(13, 15, 13, 0.97);
+  color: var(--text-secondary);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.03em;
+}
+
+.runtime-notice--success {
+  border-color: rgba(55, 217, 150, 0.35);
+  color: var(--green);
+}
+
+.runtime-notice--pending {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: var(--gold-bright);
+}
+
+.runtime-notice--error {
+  border-color: rgba(255, 100, 100, 0.4);
+  color: var(--red);
+}
+
+.runtime-notice button {
+  display: grid;
+  width: 22px;
+  height: 20px;
+  place-items: center;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.mission-runtime {
+  margin-top: 11px;
+  padding: 9px;
+  border: 1px solid var(--border-strong);
+  border-left: 2px solid var(--gold-bright);
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.mission-runtime--approved {
+  border-left-color: var(--green);
+  background: var(--green-soft);
+}
+
+.mission-runtime--rejected,
+.mission-runtime--resubmission_required {
+  border-left-color: var(--red);
+  background: var(--red-soft);
+}
+
+.mission-runtime > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mission-runtime small,
+.mission-runtime p,
+.mission-runtime em {
+  font-family: var(--mono);
+}
+
+.mission-runtime small {
+  color: var(--text-muted);
+  font-size: 7px;
+}
+
+.mission-runtime p {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 8px;
+  line-height: 1.55;
+}
+
+.mission-runtime em {
+  display: block;
+  margin-top: 7px;
+  color: var(--text-muted);
+  font-size: 7px;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.proof-form {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 11px;
+}
+
+.proof-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.proof-form label > span {
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.04em;
+}
+
+.proof-form input,
+.proof-form textarea {
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 0;
+  outline: 0;
+  background: #090b09;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+
+.proof-form input {
+  min-height: 34px;
+  padding: 7px 8px;
+}
+
+.proof-form input[type="file"] {
+  color: var(--text-muted);
+}
+
+.proof-form textarea {
+  min-height: 82px;
+  resize: vertical;
+  padding: 8px;
+  line-height: 1.55;
+}
+
+.proof-form input:focus,
+.proof-form textarea:focus {
+  border-color: rgba(212, 175, 55, 0.62);
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.12);
+}
+
+.claim-wallet-button {
+  width: 100%;
+  min-height: 37px;
+  margin-top: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.55);
+}
+
+.terminal-empty-state {
+  margin: 0;
+  padding: 12px 0;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 8px;
+  text-align: center;
+}
+
+.activity-row__icon--error {
+  border-color: rgba(255, 100, 100, 0.35);
+  background: var(--red-soft);
+  color: var(--red);
+}
+
 @media (max-width: 1380px) {
   .terminal-layout {
     grid-template-columns: 224px minmax(560px, 1fr) 290px;

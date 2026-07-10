@@ -17,6 +17,12 @@ pnpm check:cloudflare
 
 ## 2. Local development
 
+Apply D1 migrations first:
+
+```bash
+pnpm --filter @shore/api db:migrate:local
+```
+
 Start the API:
 
 ```bash
@@ -79,7 +85,7 @@ D1: shore-production
 R2: shore-private-production
 Queue: shore-jobs-production
 DLQ: shore-jobs-production-dlq
-TON: Mainnet only
+TON: Testnet-locked until separate mainnet launch approval
 ```
 
 ## 4. Provisioning status
@@ -103,14 +109,18 @@ Production resources are provisioned separately and never reuse Staging IDs.
 Staging:
 
 ```bash
+pnpm --filter @shore/api db:migrate:staging
 pnpm deploy:staging
 ```
 
 Production:
 
 ```bash
+pnpm --filter @shore/api db:migrate:production
 pnpm deploy:production
 ```
+
+Remote D1 migration requires a reviewed backup, forward-fix plan and confirmation that the deployed application supports the new schema.
 
 The root commands deploy both applications. Do not run Production deployment until the production readiness gate is approved.
 
@@ -121,9 +131,11 @@ Public, non-sensitive values may live in Wrangler `vars`.
 Secrets use:
 
 ```bash
-wrangler secret put SECRET_NAME --env staging
-wrangler secret put SECRET_NAME --env production
+wrangler secret put TELEGRAM_BOT_TOKEN --env staging
+wrangler secret put ADMIN_REVIEW_TOKEN --env staging
 ```
+
+Production secrets must be injected separately after Production approval; never reuse Staging credentials.
 
 Never commit:
 

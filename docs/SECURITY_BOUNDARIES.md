@@ -23,16 +23,23 @@ The client never receives administrator secrets, AI provider secrets, Cloudflare
 
 ## 3. Authentication boundary
 
-Future authentication must validate Telegram Init Data server-side and use secure server sessions for Web access.
+Telegram Mini App authentication validates raw `initData` server-side. The client must never treat `initDataUnsafe` as authenticated identity.
 
-Required properties:
+Implemented controls:
 
-- signed and time-bounded login payloads;
-- replay protection;
-- secure, HTTP-only session cookies;
-- CSRF protection for browser mutations;
-- stronger authentication for administrators;
-- explicit session revocation.
+- Telegram WebApp HMAC verification;
+- one-hour `auth_date` window;
+- constant-time hash comparison;
+- stable Telegram user ID;
+- opaque seven-day SHORE session;
+- only the session-token hash is stored in D1;
+- Production disables ordinary browser bootstrap sessions;
+- administrator review uses a separate Cloudflare Secret.
+
+Current controlled-Staging limitation:
+
+- the Web client carries the opaque session as a Bearer token in browser session storage;
+- Production public launch requires migration to a hardened same-origin or HttpOnly-cookie session design, explicit revocation UI and CSRF controls where cookie authentication is used.
 
 ## 4. Private files
 
@@ -134,6 +141,8 @@ No public mainnet sale while any of the following remains:
 - single-admin treasury control;
 - unaudited P0/P1 contract issue;
 - shared Staging/Production resources;
+- browser-accessible Bearer session without the approved Production session hardening;
+- missing Telegram authentication or administrator Secret rotation procedure;
 - missing private-file deletion;
 - untraceable point adjustment;
 - absent incident pause and recovery procedure.

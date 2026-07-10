@@ -1,10 +1,22 @@
+import type { ReactNode } from "react";
+
 import { formatCny, formatInteger } from "@/lib/shore-terminal/formatters";
 import type { TerminalDashboard } from "@/lib/shore-terminal/types";
 
-import { RadioIcon, TerminalMark, WalletIcon } from "./terminal-icons";
+import { RadioIcon, TerminalMark } from "./terminal-icons";
 import { StatusDot } from "./terminal-primitives";
 
-export function TerminalHeader({ dashboard }: { dashboard: TerminalDashboard }) {
+export function TerminalHeader({
+  dashboard,
+  desktopWalletControl,
+  mobileWalletControl,
+  runtimeLive,
+}: {
+  dashboard: TerminalDashboard;
+  desktopWalletControl: ReactNode;
+  mobileWalletControl: ReactNode;
+  runtimeLive: boolean;
+}) {
   return (
     <>
       <header className="terminal-header">
@@ -20,14 +32,14 @@ export function TerminalHeader({ dashboard }: { dashboard: TerminalDashboard }) 
 
         <div className="terminal-status-cluster" aria-label="系统状态">
           <span>
-            <StatusDot />
-            <b>AI VERIFY</b>
-            <small>ONLINE</small>
+            <StatusDot tone={runtimeLive ? "green" : "gold"} />
+            <b>D1 RUNTIME</b>
+            <small>{runtimeLive ? "LIVE" : "DEGRADED"}</small>
           </span>
           <span>
-            <StatusDot />
-            <b>TASK NET</b>
-            <small>LIVE</small>
+            <StatusDot tone={runtimeLive ? "green" : "gold"} />
+            <b>PROOF QUEUE</b>
+            <small>{runtimeLive ? "READY" : "OFFLINE"}</small>
           </span>
           <span>
             <StatusDot tone="gold" />
@@ -37,7 +49,7 @@ export function TerminalHeader({ dashboard }: { dashboard: TerminalDashboard }) 
           <span>
             <StatusDot />
             <b>RISK</b>
-            <small>NORMAL</small>
+            <small>FAIL-CLOSED</small>
           </span>
         </div>
 
@@ -50,10 +62,7 @@ export function TerminalHeader({ dashboard }: { dashboard: TerminalDashboard }) 
             <small>CLAIMABLE SHORE</small>
             <strong>{formatInteger(dashboard.shoreClaimable)}</strong>
           </span>
-          <button type="button" className="wallet-button" aria-label="连接TON钱包">
-            <WalletIcon />
-            <span>CONNECT</span>
-          </button>
+          {desktopWalletControl}
         </div>
       </header>
 
@@ -64,21 +73,15 @@ export function TerminalHeader({ dashboard }: { dashboard: TerminalDashboard }) 
           </span>
           <span className="terminal-brand__copy">
             <strong>SHORE.TERMINAL</strong>
-            <small>STAGING · DEMO DATA</small>
+            <small>{runtimeLive ? "STAGING · D1 LIVE" : "STAGING · DEGRADED DATA"}</small>
           </span>
         </div>
-        <button
-          type="button"
-          className="wallet-button wallet-button--compact"
-          aria-label="连接TON钱包"
-        >
-          <WalletIcon />
-        </button>
+        {mobileWalletControl}
       </div>
 
       <div className="terminal-mobile-status">
         <span>
-          <RadioIcon /> AI ONLINE
+          <RadioIcon /> {runtimeLive ? "D1 LIVE" : "DEGRADED"}
         </span>
         <span>R{String(dashboard.currentRound).padStart(2, "0")}</span>
         <span>TON TESTNET</span>

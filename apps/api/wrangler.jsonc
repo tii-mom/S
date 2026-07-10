@@ -10,8 +10,11 @@
   },
   "vars": {
     "APP_ENV": "local",
-    "CORS_ORIGIN": "http://localhost:3000",
+    "CORS_ORIGIN": "http://localhost:3000,http://127.0.0.1:3100",
     "LOG_LEVEL": "debug",
+    "TON_APP_DOMAIN": "localhost",
+    "TON_NETWORK": "testnet",
+    "SHORE_CLAIM_CONTRACT_ADDRESS": "",
   },
   "d1_databases": [
     {
@@ -50,6 +53,9 @@
         "APP_ENV": "staging",
         "CORS_ORIGIN": "https://shore-web-staging.workers.dev",
         "LOG_LEVEL": "info",
+        "TON_APP_DOMAIN": "shore-web-staging.workers.dev",
+        "TON_NETWORK": "testnet",
+        "SHORE_CLAIM_CONTRACT_ADDRESS": "",
       },
       "d1_databases": [
         {
@@ -88,6 +94,9 @@
         "APP_ENV": "production",
         "CORS_ORIGIN": "https://shore.example",
         "LOG_LEVEL": "warn",
+        "TON_APP_DOMAIN": "shore.example",
+        "TON_NETWORK": "testnet",
+        "SHORE_CLAIM_CONTRACT_ADDRESS": "",
       },
       "d1_databases": [
         {
