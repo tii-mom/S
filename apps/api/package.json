@@ -20,7 +20,7 @@
     "@shore/shared": "workspace:*",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^16.3.0",
-    "hono": "4.12.28",
+    "hono": "4.12.30",
     "tweetnacl": "^1.0.3",
     "zod": "4.4.3"
   },
